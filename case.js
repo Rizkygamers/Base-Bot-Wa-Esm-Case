@@ -81,7 +81,7 @@ export default async function handler(riz, m) {
   switch (command) {
     case "menu": {
       await riz.sendMessage(
-        sender,
+        id,
         {
           image: menuImage,
           caption: menu,
