@@ -8,7 +8,7 @@
 import './config.js'
 import fs from 'fs'
 import axios from 'axios'
-import { proto, downloadContentFromMessage } from 'baileys'
+import { proto, downloadContentFromMessage, jidNormalizedUser } from 'baileys'
 import { Sticker, StickerTypes } from 'wa-sticker-formatter'
 import fetch from 'node-fetch'
 
