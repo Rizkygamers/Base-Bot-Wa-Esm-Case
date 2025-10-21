@@ -164,6 +164,78 @@ export default async function handler(riz, m) {
   const isOwner = global.owner.includes(sender.split("@")[0]);
   if (global.selfmode && !isOwner) return;
 
+
+// === SYSTEM PLUGIN ===
+    const pluginDir = path.resolve("./plugin");
+    let plugins = [];
+
+    async function loadPlugins() {
+      try {
+        const files = fs.readdirSync(pluginDir).filter(f => f.endsWith(".js"));
+        for (const file of files) {
+          const filePath = path.join(pluginDir, file);
+          const module = await import(`file://${filePath}?v=${Date.now()}`);
+          const plugin = module.default;
+          const cmds = module.command || [];
+
+          if (!plugin || !Array.isArray(cmds)) {
+            console.log(`⚠️ ${file} plugin tidak valid. Pastikan pakai "export default" & "export const command"`);
+            continue;
+          }
+
+          plugins.push({
+            run: plugin, command: cmds
+          });
+          console.log(`✅ Loaded plugin: ${file} (${cmds.join(", ")})`);
+        }
+
+        console.log(`📦 Total plugin: ${plugins.length}`);
+      } catch (err) {
+        console.error("❌ Gagal load plugin:", err);
+      }
+    }
+
+    await loadPlugins();
+    const PLUGIN_CTX = {
+      riz,
+      id,
+      msg,
+      sender,
+      pushname,
+      isOwner,
+      isAdmin,
+      participants,
+      isBotAdmin,
+      qriz,
+      groupMetadata,
+      command,
+      args,
+      q,
+      reply,
+      isGroup,
+    };
+
+    // === EKSEKUSI PLUGIN ===
+    for (const {
+      run, command: cmds
+    } of plugins) {
+      if (cmds.find(c => c.toLowerCase() === command)) {
+        try {
+          await run(msg, PLUGIN_CTX);
+          return; // stop biar gak lanjut ke switch-case
+        } catch (err) {
+          console.error(`❌ Plugin '${command}' error:`, err);
+          await reply(`❌ Error di plugin '${command}': ${err.message}`);
+          return;
+        }
+      }
+    }
+
+    console.log("🧩 Command terdeteksi:", command);
+
+    console.log("📦 Plugin loaded:", plugins.map(p => p.command).flat());
+
+
   switch (command) {
   case "menu": {
       await riz.sendMessage(
