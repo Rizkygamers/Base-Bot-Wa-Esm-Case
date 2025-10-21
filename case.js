@@ -8,8 +8,15 @@
 import './config.js'
 import fs from 'fs'
 import axios from 'axios'
-import { proto, downloadContentFromMessage, jidNormalizedUser } from 'baileys'
-import { Sticker, StickerTypes } from 'wa-sticker-formatter'
+import {
+  proto,
+  downloadContentFromMessage,
+  jidNormalizedUser
+} from 'baileys'
+import {
+  Sticker,
+  StickerTypes
+} from 'wa-sticker-formatter'
 import fetch from 'node-fetch'
 
 // Import Scraper
@@ -21,40 +28,40 @@ export default async function handler(riz, m) {
   if (!msg.message) return
 
   const body = msg.message.conversation || msg.message.extendedTextMessage?.text || ""
-      /**
-    * Ambil JID user yang udah normal (hapus @lid)
-    * @param {Object} msg - message dari baileys
-    * @returns {string} - JID user yang udah clean
-    */
-    function CleanJid(msg) {
-      const raw = msg?.key?.participantAlt || msg?.key?.participant;
-      return jidNormalizedUser(raw);
-    }
+  /**
+  * Ambil JID user yang udah normal (hapus @lid)
+  * @param {Object} msg - message dari baileys
+  * @returns {string} - JID user yang udah clean
+  */
+  function CleanJid(msg) {
+    const raw = msg?.key?.participantAlt || msg?.key?.participant;
+    return jidNormalizedUser(raw);
+  }
 
-    const id = msg.key.remoteJid; // Id grup/Pv
-    const sender = CleanJid(msg); // Lid > Jid
-    const pushname = msg.pushName || "Unknown";
-    const isGroup = id.endsWith("@g.us");
-    
-    const pplu = fs.readFileSync('./media/my.png')
-    const qriz = {
-      key: {
-        participant: `0@s.whatsapp.net`,
-        ...(msg.chat ? {
-          remoteJid: `status@broadcast`
-        }: {})
-      },
-      message: {
-        contactMessage: {
-          displayName: `${pushname}`,
-          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:XL;Rizky,;;;\nFN: Rizky V2.2\nitem1.TEL;waid=${sender.split("@")[0]}:+${sender.split("@")[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`,
-          jpegThumbnail: pplu,
-          thumbnail: pplu,
-          sendEphemeral: true
-        }
+  const id = msg.key.remoteJid; // Id grup/Pv
+  const sender = CleanJid(msg); // Lid > Jid
+  const pushname = msg.pushName || "Unknown";
+  const isGroup = id.endsWith("@g.us");
+
+  const pplu = fs.readFileSync(global.image)
+  const qriz = {
+    key: {
+      participant: `0@s.whatsapp.net`,
+      ...(msg.chat ? {
+        remoteJid: `status@broadcast`
+      }: {})
+    },
+    message: {
+      contactMessage: {
+        displayName: `${pushname}`,
+        vcard: `BEGIN:VCARD\nVERSION:3.0\nN:XL;Rizky,;;;\nFN: Rizky V2.2\nitem1.TEL;waid=${sender.split("@")[0]}:+${sender.split("@")[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`,
+        jpegThumbnail: pplu,
+        thumbnail: pplu,
+        sendEphemeral: true
       }
     }
- 
+  }
+
   // Prefix dari global
   const usedPrefix = global.prefix.find(p => body.startsWith(p))
   if (!usedPrefix) return
@@ -64,41 +71,93 @@ export default async function handler(riz, m) {
   const command = args.shift().toLowerCase()
   const q = args.join(" ")
   
-      console.log(chalk.bold.blue("\n📩 PESAN MASUK!"));
-    console.log(chalk.gray("────────────────────────────"));
-    console.log(chalk.cyan("ID      :"), chalk.white(id));
-    console.log(chalk.magenta("JID      :"), chalk.white(sender || "null"));
-    console.log(chalk.yellow("ISGROUP  :"), chalk.white(isGroup));
-    console.log(chalk.green("PUSHNAME :"), chalk.white(pushname));
-    console.log(chalk.red("PESAN    :"), chalk.white(body));
-    console.log(chalk.gray("────────────────────────────\n"));
+      //===== MODUL GRUP =====
+    let groupMetadata = {};
+    if (isGroup) {
+      try {
+        groupMetadata = await riz.groupMetadata(id);
+      } catch (e) {
+        console.error("Error groupMetadata:", e);
+        return;
+      }
+    }
+
+    const groupName = isGroup ? (groupMetadata.subject || "Nama Grup Tidak Diketahui"): null;
+    const groupDesc = isGroup ? (groupMetadata.desc?.toString() || "Deskripsi belum diset."): null;
+
+    const participants = isGroup
+    ? (groupMetadata.participants || []).map(p => {
+      const adminRaw = p.admin ?? (p.isAdmin ? 'admin': null);
+      let admin = null;
+      if (adminRaw === 'superadmin' || adminRaw === 'creator' || adminRaw === 'owner') admin = 'superadmin';
+      else if (adminRaw === 'admin') admin = 'admin';
+
+      return {
+        jid: p.id || null,
+        lid: p.lid || null,
+        admin,
+        full: p
+      };
+    }): [];
+
+    const groupOwner = isGroup
+    ? (groupMetadata.owner || participants.find(p => p.admin === 'superadmin')?.jid || ''): '';
+
+    const groupAdmins = participants
+    .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
+    .map(p => p.id || p.jid)
+    .filter(Boolean);
+
+    let botNumber = (riz.user && (riz.user.jid || riz.user.id)) || ''
+    const botJid = botNumber ? jidNormalizedUser(botNumber): ''
+
+
+    const isBotAdmin = groupAdmins.includes(botJid);
+    const isAdmin = groupAdmins.includes(sender);
+    //===== MODUL GRUP =====
+
+  console.log(chalk.bold.blue("\n📩 PESAN MASUK!"));
+  console.log(chalk.gray("────────────────────────────"));
+  console.log(chalk.cyan("ID      :"), chalk.white(id));
+  console.log(chalk.magenta("JID      :"), chalk.white(sender || "null"));
+  console.log(chalk.yellow("ISGROUP  :"), chalk.white(isGroup));
+  console.log(chalk.green("PUSHNAME :"), chalk.white(pushname));
+  console.log(chalk.red("PESAN    :"), chalk.white(body));
+  console.log(chalk.gray("────────────────────────────\n"));
 
 
   const reply = (teks) =>
-    riz.sendMessage(id, { text: teks }, { quoted: msg })
+  riz.sendMessage(id, {
+    text: teks
+  }, {
+    quoted: msg
+  })
 
-  
+
   const menuImage = fs.readFileSync(global.image || './menu.jpg') // fallback biar gak error
 
   const menu = `\n╭─┴─❍「 *BOT INFO* 」❍
-├ *Nama Bot*: RizkyBot
-├ *Powered*: Baileys
-├ *Owner*: 0895417273523
-├ *Prefix*: *.*
-├ *Version*: 1.0 Beta
-╰─┬────❍
-╭─┴─❍「 *MENU* 」❍
-├ .ai
-├ .s
-├ .
-├ .
-├ .
-├ .
-├ .
-╰──────❍`
+  ├ *Nama Bot*: RizkyBot
+  ├ *Powered*: Baileys
+  ├ *Owner*: 0895417273523
+  ├ *Prefix*: *.*
+  ├ *Version*: 1.0 Beta
+  ╰─┬────❍
+  ╭─┴─❍「 *MENU* 」❍
+  ├ .ai
+  ├ .s
+  ├ .
+  ├ .
+  ├ .
+  ├ .
+  ├ .
+  ╰──────❍`
+  
+  const isOwner = global.owner.includes(sender.split("@")[0]);
+    if (global.selfmode && !isOwner) return;
 
   switch (command) {
-    case "menu": {
+  case "menu": {
       await riz.sendMessage(
         id,
         {
@@ -123,12 +182,14 @@ export default async function handler(riz, m) {
             }
           }
         },
-        { quoted: msg }
+        {
+          quoted: msg
+        }
       )
       break
     }
 
-    case "ai": {
+  case "ai": {
       if (!q) return reply("*Contoh:* .ai Apa itu Planet?")
       reply(global.mess?.wait || "⏳ Tunggu sebentar...")
       try {
@@ -141,7 +202,7 @@ export default async function handler(riz, m) {
       break
     }
 
-    case "s": {
+  case "s": {
       try {
         const quoted = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
         if (!quoted) return reply('❌ Balas gambar/video/stiker dengan .s')
@@ -164,15 +225,31 @@ export default async function handler(riz, m) {
           background: '#00000000'
         })
 
-        await riz.sendMessage(id, await sticker.toMessage(), { quoted: msg })
+        await riz.sendMessage(id, await sticker.toMessage(), {
+          quoted: msg
+        })
       } catch (e) {
         console.error('Sticker Error:', e)
         return reply('❌ Gagal bikin stiker:\n' + e.message)
       }
       break
     }
+    
+    case "self": {
+        if (!isOwner) return reply("❌ Khusus Owner!");
+        global.selfmode = true;
+        reply("✅ Bot sekarang dalam *SELF MODE* (hanya owner).");
+        break;
+      }
 
-    default:
-      break
+    case "public": {
+        if (!isOwner) return reply("❌ Khusus Owner!");
+        global.selfmode = false;
+        reply("✅ Bot sekarang dalam *PUBLIC MODE* (semua orang bisa pakai).");
+        break;
+      }
+
+  default:
+    break
   }
 }
