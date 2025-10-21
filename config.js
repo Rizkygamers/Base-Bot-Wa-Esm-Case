@@ -7,6 +7,8 @@ global.mess = {
   }
   
 global.image = './db/img/pfp.png'
+
+global.owner = ['62xxx']
   
 global.prefix = ['!', '.'];
   
