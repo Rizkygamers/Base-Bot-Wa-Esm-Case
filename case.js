@@ -70,68 +70,75 @@ export default async function handler(riz, m) {
   const args = bodyWithoutPrefix.trim().split(" ")
   const command = args.shift().toLowerCase()
   const q = args.join(" ")
-  
-      //===== MODUL GRUP =====
-    let groupMetadata = {};
-    if (isGroup) {
-      try {
-        groupMetadata = await riz.groupMetadata(id);
-      } catch (e) {
-        console.error("Error groupMetadata:", e);
-        return;
-      }
+
+  //===== MODUL GRUP =====
+  let groupMetadata = {};
+  if (isGroup) {
+    try {
+      groupMetadata = await riz.groupMetadata(id);
+    } catch (e) {
+      console.error("Error groupMetadata:", e);
+      return;
     }
+  }
 
-    const groupName = isGroup ? (groupMetadata.subject || "Nama Grup Tidak Diketahui"): null;
-    const groupDesc = isGroup ? (groupMetadata.desc?.toString() || "Deskripsi belum diset."): null;
+  const groupName = isGroup ? (groupMetadata.subject || "Nama Grup Tidak Diketahui"): null;
+  const groupDesc = isGroup ? (groupMetadata.desc?.toString() || "Deskripsi belum diset."): null;
 
-    const participants = isGroup
-    ? (groupMetadata.participants || []).map(p => {
-      const adminRaw = p.admin ?? (p.isAdmin ? 'admin': null);
-      let admin = null;
-      if (adminRaw === 'superadmin' || adminRaw === 'creator' || adminRaw === 'owner') admin = 'superadmin';
-      else if (adminRaw === 'admin') admin = 'admin';
+  const participants = isGroup
+  ? (groupMetadata.participants || []).map(p => {
+    const adminRaw = p.admin ?? (p.isAdmin ? 'admin': null);
+    let admin = null;
+    if (adminRaw === 'superadmin' || adminRaw === 'creator' || adminRaw === 'owner') admin = 'superadmin';
+    else if (adminRaw === 'admin') admin = 'admin';
 
-      return {
-        jid: p.id || null,
-        lid: p.lid || null,
-        admin,
-        full: p
-      };
-    }): [];
+    return {
+      jid: p.id || null,
+      lid: p.lid || null,
+      admin,
+      full: p
+    };
+  }): [];
 
-    const groupOwner = isGroup
-    ? (groupMetadata.owner || participants.find(p => p.admin === 'superadmin')?.jid || ''): '';
+  const groupOwner = isGroup
+  ? (groupMetadata.owner || participants.find(p => p.admin === 'superadmin')?.jid || ''): '';
 
-    const groupAdmins = participants
-    .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
-    .map(p => p.id || p.jid)
-    .filter(Boolean);
+  const groupAdmins = participants
+  .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
+  .map(p => p.id || p.jid)
+  .filter(Boolean);
 
-    let botNumber = (riz.user && (riz.user.jid || riz.user.id)) || ''
-    const botJid = botNumber ? jidNormalizedUser(botNumber): ''
+  let botNumber = (riz.user && (riz.user.jid || riz.user.id)) || ''
+  const botJid = botNumber ? jidNormalizedUser(botNumber): ''
 
 
-    const isBotAdmin = groupAdmins.includes(botJid);
-    const isAdmin = groupAdmins.includes(sender);
-    //===== MODUL GRUP =====
+  const isBotAdmin = groupAdmins.includes(botJid);
+  const isAdmin = groupAdmins.includes(sender);
+  //===== MODUL GRUP =====
 
   console.log(chalk.bold.blue("\n📩 PESAN MASUK!"));
   console.log(chalk.gray("────────────────────────────"));
-  console.log(chalk.cyan("ID      :"), chalk.white(id));
-  console.log(chalk.magenta("JID      :"), chalk.white(sender || "null"));
-  console.log(chalk.yellow("ISGROUP  :"), chalk.white(isGroup));
-  console.log(chalk.green("PUSHNAME :"), chalk.white(pushname));
-  console.log(chalk.red("PESAN    :"), chalk.white(body));
+  console.log(chalk.cyan("ID      :"),
+    chalk.white(id));
+  console.log(chalk.magenta("JID      :"),
+    chalk.white(sender || "null"));
+  console.log(chalk.yellow("ISGROUP  :"),
+    chalk.white(isGroup));
+  console.log(chalk.green("PUSHNAME :"),
+    chalk.white(pushname));
+  console.log(chalk.red("PESAN    :"),
+    chalk.white(body));
   console.log(chalk.gray("────────────────────────────\n"));
 
 
   const reply = (teks) =>
-  riz.sendMessage(id, {
-    text: teks
-  }, {
-    quoted: msg
-  })
+  riz.sendMessage(id,
+    {
+      text: teks
+    },
+    {
+      quoted: msg
+    })
 
 
   const menuImage = fs.readFileSync(global.image || './menu.jpg') // fallback biar gak error
@@ -139,22 +146,22 @@ export default async function handler(riz, m) {
   const menu = `\n╭─┴─❍「 *BOT INFO* 」❍
   ├ *Nama Bot*: RizkyBot
   ├ *Powered*: Baileys
-  ├ *Owner*: 0895417273523
+  ├ *Owner*: ${global.owner}
   ├ *Prefix*: *.*
   ├ *Version*: 1.0 Beta
   ╰─┬────❍
   ╭─┴─❍「 *MENU* 」❍
   ├ .ai
   ├ .s
-  ├ .
-  ├ .
+  ├ .self [Owner Only]
+  ├ .public [Owner Only]
   ├ .
   ├ .
   ├ .
   ╰──────❍`
-  
+
   const isOwner = global.owner.includes(sender.split("@")[0]);
-    if (global.selfmode && !isOwner) return;
+  if (global.selfmode && !isOwner) return;
 
   switch (command) {
   case "menu": {
@@ -234,20 +241,20 @@ export default async function handler(riz, m) {
       }
       break
     }
-    
-    case "self": {
-        if (!isOwner) return reply("❌ Khusus Owner!");
-        global.selfmode = true;
-        reply("✅ Bot sekarang dalam *SELF MODE* (hanya owner).");
-        break;
-      }
 
-    case "public": {
-        if (!isOwner) return reply("❌ Khusus Owner!");
-        global.selfmode = false;
-        reply("✅ Bot sekarang dalam *PUBLIC MODE* (semua orang bisa pakai).");
-        break;
-      }
+  case "self": {
+      if (!isOwner) return reply("❌ Khusus Owner!");
+      global.selfmode = true;
+      reply("✅ Bot sekarang dalam *SELF MODE* (hanya owner).");
+      break;
+    }
+
+  case "public": {
+      if (!isOwner) return reply("❌ Khusus Owner!");
+      global.selfmode = false;
+      reply("✅ Bot sekarang dalam *PUBLIC MODE* (semua orang bisa pakai).");
+      break;
+    }
 
   default:
     break
