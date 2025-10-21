@@ -35,6 +35,25 @@ export default async function handler(riz, m) {
     const sender = CleanJid(msg); // Lid > Jid
     const pushname = msg.pushName || "Unknown";
     const isGroup = id.endsWith("@g.us");
+    
+    const pplu = fs.readFileSync('./media/my.png')
+    const qriz = {
+      key: {
+        participant: `0@s.whatsapp.net`,
+        ...(msg.chat ? {
+          remoteJid: `status@broadcast`
+        }: {})
+      },
+      message: {
+        contactMessage: {
+          displayName: `${pushname}`,
+          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:XL;Rizky,;;;\nFN: Rizky V2.2\nitem1.TEL;waid=${sender.split("@")[0]}:+${sender.split("@")[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`,
+          jpegThumbnail: pplu,
+          thumbnail: pplu,
+          sendEphemeral: true
+        }
+      }
+    }
  
   // Prefix dari global
   const usedPrefix = global.prefix.find(p => body.startsWith(p))
