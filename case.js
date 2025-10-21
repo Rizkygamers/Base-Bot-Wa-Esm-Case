@@ -9,6 +9,7 @@ import './config.js'
 import fs from 'fs'
 import axios from 'axios'
 import chalk from "chalk";
+import path from 'path';
 import {
   proto,
   downloadContentFromMessage,
