@@ -166,124 +166,119 @@ export default async function handler(riz, m) {
   if (global.selfmode && !isOwner) return;
 
 
-// === SYSTEM PLUGIN ===
-    const pluginDir = path.resolve("./plugin");
-    let plugins = [];
+  // === SYSTEM PLUGIN ===
+  const pluginDir = path.resolve("./plugin");
+  let plugins = [];
 
-    async function loadPlugins() {
+  async function loadPlugins() {
+    try {
+      const files = fs.readdirSync(pluginDir).filter(f => f.endsWith(".js"));
+      for (const file of files) {
+        const filePath = path.join(pluginDir, file);
+        const module = await import(`file://${filePath}?v=${Date.now()}`);
+        const plugin = module.default;
+        const cmds = module.command || [];
+
+        if (!plugin || !Array.isArray(cmds)) {
+          console.log(`⚠️ ${file} plugin tidak valid. Pastikan pakai "export default" & "export const command"`);
+          continue;
+        }
+
+        plugins.push({
+          run: plugin, command: cmds
+        });
+        console.log(`✅ Loaded plugin: ${file} (${cmds.join(", ")})`);
+      }
+
+      console.log(`📦 Total plugin: ${plugins.length}`);
+    } catch (err) {
+      console.error("❌ Gagal load plugin:", err);
+    }
+  }
+
+  await loadPlugins();
+  const PLUGIN_CTX = {
+    riz,
+    id,
+    msg,
+    sender,
+    pushname,
+    isOwner,
+    isAdmin,
+    participants,
+    isBotAdmin,
+    qriz,
+    groupMetadata,
+    command,
+    args,
+    q,
+    reply,
+    isGroup,
+  };
+
+  // === EKSEKUSI PLUGIN ===
+  for (const {
+    run, command: cmds
+  } of plugins) {
+    if (cmds.find(c => c.toLowerCase() === command)) {
       try {
-        const files = fs.readdirSync(pluginDir).filter(f => f.endsWith(".js"));
-        for (const file of files) {
-          const filePath = path.join(pluginDir, file);
-          const module = await import(`file://${filePath}?v=${Date.now()}`);
-          const plugin = module.default;
-          const cmds = module.command || [];
-
-          if (!plugin || !Array.isArray(cmds)) {
-            console.log(`⚠️ ${file} plugin tidak valid. Pastikan pakai "export default" & "export const command"`);
-            continue;
-          }
-
-          plugins.push({
-            run: plugin, command: cmds
-          });
-          console.log(`✅ Loaded plugin: ${file} (${cmds.join(", ")})`);
-        }
-
-        console.log(`📦 Total plugin: ${plugins.length}`);
+        await run(msg, PLUGIN_CTX);
+        return; // stop biar gak lanjut ke switch-case
       } catch (err) {
-        console.error("❌ Gagal load plugin:", err);
+        console.error(`❌ Plugin '${command}' error:`, err);
+        await reply(`❌ Error di plugin '${command}': ${err.message}`);
+        return;
       }
     }
+  }
 
-    await loadPlugins();
-    const PLUGIN_CTX = {
-      riz,
-      id,
-      msg,
-      sender,
-      pushname,
-      isOwner,
-      isAdmin,
-      participants,
-      isBotAdmin,
-      qriz,
-      groupMetadata,
-      command,
-      args,
-      q,
-      reply,
-      isGroup,
-    };
+  console.log("🧩 Command terdeteksi:", command);
 
-    // === EKSEKUSI PLUGIN ===
-    for (const {
-      run, command: cmds
-    } of plugins) {
-      if (cmds.find(c => c.toLowerCase() === command)) {
-        try {
-          await run(msg, PLUGIN_CTX);
-          return; // stop biar gak lanjut ke switch-case
-        } catch (err) {
-          console.error(`❌ Plugin '${command}' error:`, err);
-          await reply(`❌ Error di plugin '${command}': ${err.message}`);
-          return;
-        }
-      }
-    }
-
-    console.log("🧩 Command terdeteksi:", command);
-
-    console.log("📦 Plugin loaded:", plugins.map(p => p.command).flat());
+  console.log("📦 Plugin loaded:", plugins.map(p => p.command).flat());
 
 
   switch (command) {
   case "menu": {
-  await riz.sendMessage(
-    id,
-    {
-      image: menuImage,
-      caption: menu,
-      footer: `${global.footer}`,
-      buttons: [
+      await riz.sendMessage(
+        id,
         {
-          buttonId: "action",
-          buttonText: { displayText: "📜 Buka Menu" },
-          type: 4,
-          nativeFlowInfo: {
-            name: "single_select",
-            paramsJson: JSON.stringify({
-              title: "📜 Buka Menu",
-              sections: [
-                {
+          image: menuImage,
+          caption: menu,
+          footer: "© RizkyDev - RizBot",
+          buttons: [{
+            buttonId: "action",
+            buttonText: {
+              displayText: "📜 Buka Menu"
+            },
+            type: 4,
+            nativeFlowInfo: {
+              name: "single_select",
+              paramsJson: JSON.stringify({
+                title: "📜 Buka Menu",
+                sections: [{
                   title: "INFORMATION",
-                  rows: [
-                    {
-                      title: "Script 📥", 
-                      description: "Script Riz-Bot", 
-                      id: ".sc"
-                    }
-                  ]
+                  rows: [{
+                    title: "Script 📥",
+                    description: "Script Riz-Bot",
+                    id: ".sc"
+                  }]
                 },
-                {
-                  title: "LIST MENU",
-                  highlight_label: "Recomend",
-                  rows: [
-                    {
-                      title: "AllMenu ⚡", 
-                      description: "Menampilkan Allmenu", 
+                  {
+                    title: "LIST MENU",
+                    highlight_label: "Recomend",
+                    rows: [{
+                      title: "AllMenu ⚡",
+                      description: "Menampilkan Allmenu",
                       id: ".allmenu"
                     },
-                  ]
-                }
-              ]
-            })
-          }
-        }
-      ],
-      headerType: 1,
-      viewOnce: true,
-                contextInfo: {
+                    ]
+                  }]
+              })
+            }
+          }],
+          headerType: 1,
+          viewOnce: true,
+          contextInfo: {
             forwardingScore: 12,
             isForwarded: true,
             mentionedJid: [sender],
@@ -300,11 +295,13 @@ export default async function handler(riz, m) {
               renderLargerThumbnail: true
             }
           }
-    },
-    { quoted: qriz }
-  );
-  break;
-}
+        },
+        {
+          quoted: qriz
+        }
+      );
+      break;
+    }
   case "ai": {
       if (!q) return reply("*Contoh:* .ai Apa itu Planet?")
       reply(global.mess?.wait || "⏳ Tunggu sebentar...")
