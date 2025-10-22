@@ -325,13 +325,13 @@ export default async function handler(riz, m) {
       );
       break;
     }
-    
-    case "sc": {
+
+  case "sc": {
       reply("https://github.com/Rizkygamers/Base-Bot-Wa-Esm-Case")
       reply("FREE CUY PAKE AJA\n")
     } break;
-    
-    case "allmenu": {
+
+  case "allmenu": {
       await riz.sendMessage(
         sender,
         {
@@ -356,11 +356,13 @@ export default async function handler(riz, m) {
             }
           }
         },
-        { quoted: qriz }
+        {
+          quoted: qriz
+        }
       )
       break
     }
-    
+
   case "ai": {
       if (!q) return reply("*Contoh:* .ai Apa itu Planet?")
       reply(global.mess?.wait || "⏳ Tunggu sebentar...")
