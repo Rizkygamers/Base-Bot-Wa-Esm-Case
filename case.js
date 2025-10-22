@@ -29,7 +29,17 @@ export default async function handler(riz, m) {
   const msg = m.messages[0]
   if (!msg.message) return
 
-  const body = msg.message.conversation || msg.message.extendedTextMessage?.text || ""
+  let body =
+    msg.message.conversation ||
+    msg.message.extendedTextMessage?.text ||
+    msg.message.imageMessage?.caption ||
+    msg.message.videoMessage?.caption ||
+    msg.message.buttonsResponseMessage?.selectedButtonId ||
+    msg.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
+    msg.message.templateButtonReplyMessage?.selectedId ||
+    (msg.message.nativeFlowResponseMessage?.paramsJson
+      ? JSON.parse(msg.message.nativeFlowResponseMessage.paramsJson)?.id: "") ||
+    "";
   /**
   * Ambil JID user yang udah normal (hapus @lid)
   * @param {Object} msg - message dari baileys
