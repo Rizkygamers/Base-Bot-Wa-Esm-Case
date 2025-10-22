@@ -149,7 +149,7 @@ export default async function handler(riz, m) {
       text: teks
     },
     {
-      quoted: msg
+      quoted: qriz
     })
 
 
@@ -172,7 +172,7 @@ export default async function handler(riz, m) {
   ├ .
   ├ .
   ╰──────❍`
-  
+
   const menu = `
   ╭─┴─❍「 *BOT INFO* 」❍
   ├ *Nama Bot*: RizkyBot
@@ -325,6 +325,42 @@ export default async function handler(riz, m) {
       );
       break;
     }
+    
+    case "sc": {
+      reply("https://github.com/Rizkygamers/Base-Bot-Wa-Esm-Case")
+      reply("FREE CUY PAKE AJA\n")
+    } break;
+    
+    case "allmenu": {
+      await riz.sendMessage(
+        sender,
+        {
+          image: menuImage,
+          caption: allmenu,
+          footer: "© RizkyDev - RizBot",
+          contextInfo: {
+            forwardingScore: 12,
+            isForwarded: true,
+            mentionedJid: [sender],
+            forwardedNewsletterMessageInfo: {
+              newsletterName: "— RizkyDev",
+              newsletterJid: "120363402305551203@newsletter"
+            },
+            externalAdReply: {
+              title: "Base Bot",
+              body: "By RizkyDev",
+              thumbnail: menuImage,
+              sourceUrl: "https://github.com/Rizkygamers",
+              mediaType: 1,
+              renderLargerThumbnail: true
+            }
+          }
+        },
+        { quoted: qriz }
+      )
+      break
+    }
+    
   case "ai": {
       if (!q) return reply("*Contoh:* .ai Apa itu Planet?")
       reply(global.mess?.wait || "⏳ Tunggu sebentar...")
@@ -362,7 +398,7 @@ export default async function handler(riz, m) {
         })
 
         await riz.sendMessage(id, await sticker.toMessage(), {
-          quoted: msg
+          quoted: qriz
         })
       } catch (e) {
         console.error('Sticker Error:', e)
