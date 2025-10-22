@@ -30,16 +30,16 @@ export default async function handler(riz, m) {
   if (!msg.message) return
 
   let body =
-    msg.message.conversation ||
-    msg.message.extendedTextMessage?.text ||
-    msg.message.imageMessage?.caption ||
-    msg.message.videoMessage?.caption ||
-    msg.message.buttonsResponseMessage?.selectedButtonId ||
-    msg.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
-    msg.message.templateButtonReplyMessage?.selectedId ||
-    (msg.message.nativeFlowResponseMessage?.paramsJson
-      ? JSON.parse(msg.message.nativeFlowResponseMessage.paramsJson)?.id: "") ||
-    "";
+  msg.message.conversation ||
+  msg.message.extendedTextMessage?.text ||
+  msg.message.imageMessage?.caption ||
+  msg.message.videoMessage?.caption ||
+  msg.message.buttonsResponseMessage?.selectedButtonId ||
+  msg.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
+  msg.message.templateButtonReplyMessage?.selectedId ||
+  (msg.message.nativeFlowResponseMessage?.paramsJson
+    ? JSON.parse(msg.message.nativeFlowResponseMessage.paramsJson)?.id: "") ||
+  "";
   /**
   * Ambil JID user yang udah normal (hapus @lid)
   * @param {Object} msg - message dari baileys
@@ -155,7 +155,8 @@ export default async function handler(riz, m) {
 
   const menuImage = fs.readFileSync(global.image || './menu.jpg') // fallback biar gak error
 
-  const menu = `\n╭─┴─❍「 *BOT INFO* 」❍
+  const allmenu = `
+  ╭─┴─❍「 *BOT INFO* 」❍
   ├ *Nama Bot*: RizkyBot
   ├ *Powered*: Baileys
   ├ *Owner*: ${global.owner}
@@ -170,6 +171,18 @@ export default async function handler(riz, m) {
   ├ .
   ├ .
   ├ .
+  ╰──────❍`
+  
+  const menu = `
+  ╭─┴─❍「 *BOT INFO* 」❍
+  ├ *Nama Bot*: RizkyBot
+  ├ *Powered*: Baileys
+  ├ *Owner*: ${global.owner}
+  ├ *Prefix*: *.*
+  ├ *Version*: 1.0 Beta
+  ╰─┬────❍
+  ╭─┴─❍「 *BOT* 」❍
+  ├ *KETIK .allmenu/Pencet Tombol di bawah
   ╰──────❍`
 
   const isOwner = global.owner.includes(sender.split("@")[0]);
