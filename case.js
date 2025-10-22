@@ -239,13 +239,51 @@ export default async function handler(riz, m) {
 
   switch (command) {
   case "menu": {
-      await riz.sendMessage(
-        id,
+  await riz.sendMessage(
+    id,
+    {
+      image: menuImage,
+      caption: menu,
+      footer: `${global.footer}`,
+      buttons: [
         {
-          image: menuImage,
-          caption: menu,
-          footer: "© RizkyDev - RizBot",
-          contextInfo: {
+          buttonId: "action",
+          buttonText: { displayText: "📜 Buka Menu" },
+          type: 4,
+          nativeFlowInfo: {
+            name: "single_select",
+            paramsJson: JSON.stringify({
+              title: "📜 Buka Menu",
+              sections: [
+                {
+                  title: "INFORMATION",
+                  rows: [
+                    {
+                      title: "Script 📥", 
+                      description: "Script Riz-Bot", 
+                      id: ".sc"
+                    }
+                  ]
+                },
+                {
+                  title: "LIST MENU",
+                  highlight_label: "Recomend",
+                  rows: [
+                    {
+                      title: "AllMenu ⚡", 
+                      description: "Menampilkan Allmenu", 
+                      id: ".allmenu"
+                    },
+                  ]
+                }
+              ]
+            })
+          }
+        }
+      ],
+      headerType: 1,
+      viewOnce: true,
+                contextInfo: {
             forwardingScore: 12,
             isForwarded: true,
             mentionedJid: [sender],
@@ -262,14 +300,11 @@ export default async function handler(riz, m) {
               renderLargerThumbnail: true
             }
           }
-        },
-        {
-          quoted: msg
-        }
-      )
-      break
-    }
-
+    },
+    { quoted: qriz }
+  );
+  break;
+}
   case "ai": {
       if (!q) return reply("*Contoh:* .ai Apa itu Planet?")
       reply(global.mess?.wait || "⏳ Tunggu sebentar...")
