@@ -155,35 +155,6 @@ export default async function handler(riz, m) {
 
   const menuImage = fs.readFileSync(global.image || './menu.jpg') // fallback biar gak error
 
-  const allmenu = `
-  ╭─┴─❍「 *BOT INFO* 」❍
-  ├ *Nama Bot*: RizkyBot
-  ├ *Powered*: Baileys
-  ├ *Owner*: ${global.owner}
-  ├ *Prefix*: *.*
-  ├ *Version*: 1.0 Beta
-  ╰─┬────❍
-  ╭─┴─❍「 *MENU* 」❍
-  ├ .ai
-  ├ .s
-  ├ .self [Owner Only]
-  ├ .public [Owner Only]
-  ├ .
-  ├ .
-  ├ .
-  ╰──────❍`
-
-  const menu = `
-  ╭─┴─❍「 *BOT INFO* 」❍
-  ├ *Nama Bot*: RizkyBot
-  ├ *Powered*: Baileys
-  ├ *Owner*: ${global.owner}
-  ├ *Prefix*: *.*
-  ├ *Version*: 1.0 Beta
-  ╰─┬────❍
-  ╭─┴─❍「 *BOT* 」❍
-  ├ *KETIK .allmenu/Pencet Tombol di bawah
-  ╰──────❍`
 
   const isOwner = global.owner.includes(sender.split("@")[0]);
   if (global.selfmode && !isOwner) return;
@@ -261,70 +232,24 @@ export default async function handler(riz, m) {
 
 
   switch (command) {
-  case "menu": {
-      await riz.sendMessage(
-        id,
-        {
-          image: menuImage,
-          caption: menu,
-          footer: "© RizkyDev - RizBot",
-          buttons: [{
-            buttonId: "action",
-            buttonText: {
-              displayText: "📜 Buka Menu"
-            },
-            type: 4,
-            nativeFlowInfo: {
-              name: "single_select",
-              paramsJson: JSON.stringify({
-                title: "📜 Buka Menu",
-                sections: [{
-                  title: "INFORMATION",
-                  rows: [{
-                    title: "Script 📥",
-                    description: "Script Riz-Bot",
-                    id: ".sc"
-                  }]
-                },
-                  {
-                    title: "LIST MENU",
-                    highlight_label: "Recomend",
-                    rows: [{
-                      title: "AllMenu ⚡",
-                      description: "Menampilkan Allmenu",
-                      id: ".allmenu"
-                    },
-                    ]
-                  }]
-              })
-            }
-          }],
-          headerType: 1,
-          viewOnce: true,
-          contextInfo: {
-            forwardingScore: 12,
-            isForwarded: true,
-            mentionedJid: [sender],
-            forwardedNewsletterMessageInfo: {
-              newsletterName: "— RizkyDev",
-              newsletterJid: "120363402305551203@newsletter"
-            },
-            externalAdReply: {
-              title: "Base Bot",
-              body: "By RizkyDev",
-              thumbnail: menuImage,
-              sourceUrl: "https://github.com/Rizkygamers",
-              mediaType: 1,
-              renderLargerThumbnail: true
-            }
-          }
-        },
-        {
-          quoted: qriz
-        }
-      );
-      break;
-    }
+  const menu = `
+ ╭─┴─❍「 *BOT INFO* 」❍
+├ *Nama Bot*: RizkyBot
+├ *Powered*: Baileys
+├ *Owner*: ${global.owner}
+├ *Prefix*: *.*
+├ *Version*: 1.0 Beta
+╰─┬────❍
+╭─┴─❍「 *MENU* 」❍
+├ .ai
+├ .s
+├ .sc
+├ .self
+├ .public
+├ .
+├ .
+╰──────❍`
+
 
   case "sc": {
       reply("https://github.com/Rizkygamers/Base-Bot-Wa-Esm-Case")
@@ -333,10 +258,10 @@ export default async function handler(riz, m) {
 
   case "allmenu": {
       await riz.sendMessage(
-        sender,
+        id,
         {
           image: menuImage,
-          caption: allmenu,
+          caption: menu,
           footer: "© RizkyDev - RizBot",
           contextInfo: {
             forwardingScore: 12,
