@@ -155,6 +155,25 @@ export default async function handler(riz, m) {
 
   const menuImage = fs.readFileSync(global.image || './menu.jpg') // fallback biar gak error
 
+const menu = `
+ ╭─┴─❍「 *BOT INFO* 」❍
+├ *Nama Bot*: RizkyBot
+├ *Powered*: Baileys
+├ *Owner*: ${global.owner}
+├ *Prefix*: *.*
+├ *Version*: 1.0 Beta
+╰─┬────❍
+╭─┴─❍「 *MENU* 」❍
+├ .ai
+├ .s
+├ .sc
+├ .self
+├ .public
+├ .
+├ .
+╰──────❍`
+
+
 
   const isOwner = global.owner.includes(sender.split("@")[0]);
   if (global.selfmode && !isOwner) return;
@@ -232,31 +251,14 @@ export default async function handler(riz, m) {
 
 
   switch (command) {
-  const menu = `
- ╭─┴─❍「 *BOT INFO* 」❍
-├ *Nama Bot*: RizkyBot
-├ *Powered*: Baileys
-├ *Owner*: ${global.owner}
-├ *Prefix*: *.*
-├ *Version*: 1.0 Beta
-╰─┬────❍
-╭─┴─❍「 *MENU* 」❍
-├ .ai
-├ .s
-├ .sc
-├ .self
-├ .public
-├ .
-├ .
-╰──────❍`
-
+  
 
   case "sc": {
       reply("https://github.com/Rizkygamers/Base-Bot-Wa-Esm-Case")
       reply("FREE CUY PAKE AJA\n")
     } break;
 
-  case "allmenu": {
+  case "menu": {
       await riz.sendMessage(
         id,
         {
