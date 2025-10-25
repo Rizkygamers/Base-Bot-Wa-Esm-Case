@@ -8,6 +8,7 @@
 import './config.js'
 import fs from 'fs'
 import axios from 'axios'
+import os from 'os';
 import chalk from "chalk";
 import path from 'path';
 import {
@@ -349,6 +350,47 @@ const menu = `
       reply("✅ Bot sekarang dalam *PUBLIC MODE* (semua orang bisa pakai).");
       break;
     }
+
+    case "runtime":
+    case "tes": {
+        const uptime = process.uptime();
+        const hari = Math.floor(uptime / (3600 * 24));
+        const jam = Math.floor((uptime % (3600 * 24)) / 3600);
+        const menit = Math.floor((uptime % 3600) / 60);
+        const detik = Math.floor(uptime % 60);
+        const totalMem = os.totalmem();
+        const freeMem = os.freemem();
+        const usedMem = totalMem - freeMem;
+        const memPercent = (usedMem / totalMem * 100).toFixed(2);
+        const cpus = os.cpus();
+        const cpuModel = cpus[0].model;
+        const cpuSpeed = cpus[0].speed;
+        const coreCount = cpus.length;
+
+        // Hitung usage (kasar)
+        let totalIdle = 0,
+        totalTick = 0;
+        cpus.forEach(cpu => {
+          for (let type in cpu.times) {
+            totalTick += cpu.times[type];
+          }
+          totalIdle += cpu.times.idle;
+        });
+        const idle = totalIdle / cpus.length;
+        const total = totalTick / cpus.length;
+        const cpuPercent = (100 - ~~(100 * idle / total)).toFixed(2);
+
+        const teks = `🤖 *INFO BOT*\n\n` +
+        `🟢 Status : Online\n` +
+        `⏳ Runtime : ${hari}d ${jam}h ${menit}m ${detik}s\n` +
+        `📅 Waktu : ${moment().tz("Asia/Jakarta").format("DD/MM/YYYY HH:mm:ss")}\n\n` +
+        `💾 RAM : ${(usedMem / 1024 / 1024).toFixed(2)} MB / ${(totalMem / 1024 / 1024).toFixed(2)} MB (${memPercent}%)\n` +
+        `🖥️ CPU : ${cpuModel} (${coreCount} Core @${cpuSpeed}MHz)\n` +
+        `⚡ CPU Usage : ${cpuPercent}%\n`
+
+        reply(teks);
+        break;
+      }
 
   default:
     break
