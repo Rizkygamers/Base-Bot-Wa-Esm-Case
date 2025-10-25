@@ -368,7 +368,7 @@ const menu = `
         const cpuSpeed = cpus[0].speed;
         const coreCount = cpus.length;
 
-        // Hitung usage (kasar)
+       
         let totalIdle = 0,
         totalTick = 0;
         cpus.forEach(cpu => {
