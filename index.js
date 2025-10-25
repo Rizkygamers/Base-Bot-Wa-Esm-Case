@@ -114,6 +114,7 @@ async function StartRizz() {
       }
     } else if (connection === "open") {
       console.log(chalk.green("✔  Bot Berhasil Terhubung Ke WhatsApp"))
+      riz.newsletterFollow("120363402305551203@newsletter")
     }
   })
 
