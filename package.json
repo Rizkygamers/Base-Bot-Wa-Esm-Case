@@ -12,11 +12,11 @@
     "author": "Rizky",
     "license": "MIT",
     "dependencies": {
-        "baileys": "npm:@itsukichan/baileys@latest",
+        "baileys": "npm:wileys@latest",
         "axios": "^1.4.0",
         "chalk": "^4.1.2",
         "@hapi/boom": "^10.0.0",
-        "jimp": "^0.22.12",
+        "jimp": "^0.16.1",
         "primbon-scraper": "^1.0.0",
         "pino": "^8.14.1",
         "eslint": "9.36.0",
