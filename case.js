@@ -42,13 +42,9 @@ export default async function handler(riz, m) {
   (msg.message.nativeFlowResponseMessage?.paramsJson
     ? JSON.parse(msg.message.nativeFlowResponseMessage.paramsJson)?.id: "") ||
   "";
-  /**
-  * Ambil JID user yang udah normal (hapus @lid)
-  * @param {Object} msg - message dari baileys
-  * @returns {string} - JID user yang udah clean
-  */
-  function CleanJid(msg) {
-    const raw = msg?.key?.participantAlt || msg?.key?.participant;
+
+function CleanJid(msg) {
+    const raw = msg?.key?.participantAlt || msg?.key?.participant || senderPn || msg.key.participants || msg.key.participantPn;
     return jidNormalizedUser(raw);
   }
 
@@ -107,8 +103,8 @@ export default async function handler(riz, m) {
     else if (adminRaw === 'admin') admin = 'admin';
 
     return {
-      jid: p.id || null,
-      lid: p.lid || null,
+      id: p?.id || null,
+      jid: p?.jid || null,
       admin,
       full: p
     };
@@ -119,7 +115,7 @@ export default async function handler(riz, m) {
 
   const groupAdmins = participants
   .filter(p => p.admin === 'admin' || p.admin === 'superadmin')
-  .map(p => p.id || p.jid)
+  .map(p => p.jid || p.id)
   .filter(Boolean);
 
   let botNumber = (riz.user && (riz.user.jid || riz.user.id)) || ''
@@ -177,9 +173,10 @@ const menu = `
 
 
 
-  const isOwner = global.owner.includes(sender.split("@")[0]);
-  if (global.selfmode && !isOwner) return;
-
+  const isOwner =
+    (Array.isArray(global.owner) && global.owner.includes(sender.split("@")[0])) ||
+    msg?.key?.fromMe === true;
+    if (global.selfmode && !isOwner) return;
 
   // === SYSTEM PLUGIN ===
   const pluginDir = path.resolve("./plugin");
