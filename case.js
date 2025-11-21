@@ -44,7 +44,7 @@ export default async function handler(riz, m) {
   "";
 
 function CleanJid(msg) {
-    const raw = msg?.key?.participantAlt || msg?.key?.participant || msg.key.participants || msg.key.participantPn;
+    const raw = msg?.key?.participantAlt || msg?.key?.participant || msg.key.remoteJid || msg.key.participantPn;
     return jidNormalizedUser(raw);
   }
 
