@@ -25,6 +25,8 @@ import fetch from 'node-fetch'
 
 // Import Scraper
 import Ai4Chat from './scrape/Ai4Chat.js'
+import UguuUpload from './scrape/Uguu.js'
+import CatboxMoe from './scrape/CatBox.js';
 
 // Export utama handler
 export default async function handler(riz, m) {
