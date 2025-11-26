@@ -337,6 +337,90 @@ const menu = `
       break
     }
 
+case 'tourl': {
+        try {
+          const quotedMsg = msg.message?.extendedTextMessage?.contextInfo?.quotedMessage
+          if (!quotedMsg) return reply('⚠ *Reply ke media dulu, bro!*')
+
+          const mediaType = Object.keys(quotedMsg).find(type =>
+            ['imageMessage', 'videoMessage', 'audioMessage', 'documentMessage', 'stickerMessage'].includes(type)
+          )
+          if (!mediaType) return reply('⚠ *Yang direply harus media (gambar/video/audio/dokumen/stiker)!*')
+
+          const mime = quotedMsg[mediaType]?.mimetype || ''
+          const isImage = /image/.test(mime)
+          const isVideo = /video/.test(mime)
+          const isAudio = /audio/.test(mime)
+          const isSticker = mediaType === 'stickerMessage'
+          const isDocument = mediaType === 'documentMessage'
+
+          reply(mess.wait)
+
+          const stream = await downloadContentFromMessage(quotedMsg[mediaType], mediaType.replace('Message', ''))
+          let buffer = Buffer.from([])
+          for await (const chunk of stream) buffer = Buffer.concat([buffer, chunk])
+
+          if (buffer.length === 0) return reply('❌ *Gagal ambil media, buffer kosong.*')
+
+          let fileExt = '.jpg'
+          let fileName = `./temp_${Date.now()}`
+
+          if (isImage) {
+            fileExt = '.jpg'
+            fileName += fileExt
+          } else if (isVideo) {
+            fileExt = '.mp4'
+            fileName += fileExt
+          } else if (isAudio) {
+            fileExt = '.mp3'
+            fileName += fileExt
+          } else if (isSticker) {
+            fileExt = '.webp'
+            fileName += fileExt
+          } else if (isDocument) {
+            const docName = quotedMsg[mediaType]?.fileName || 'file'
+            fileExt = path.extname(docName) || '.bin'
+            fileName += fileExt
+          }
+
+          fs.writeFileSync(fileName, buffer)
+
+          let catboxUrl = "Upload gagal"
+          try {
+            const catRes = await CatboxMoe(fileName)
+            if (catRes && catRes.startsWith("http")) catboxUrl = catRes
+          } catch (e) {
+            console.error("Catbox Error:", e.message)
+          }
+
+          let uguuUrl = "Upload gagal"
+          try {
+            const uguuRes = await UguuUpload(fileName, `upload_${Date.now()}${fileExt}`)
+            if (uguuRes?.url) uguuUrl = uguuRes.url
+          } catch (e) {
+            console.error("Uguu Error:", e.message)
+          }
+
+          const mediaTypeText = isImage ? 'Gambar':
+          isVideo ? 'Video':
+          isAudio ? 'Audio':
+          isSticker ? 'Stiker':
+          isDocument ? 'Dokumen': 'File'
+
+          reply(
+            `✅ *Hasil Upload ${mediaTypeText}:*\n\n` +
+            `📦 Catbox : ${catboxUrl}\n` +
+            `📦 Uguu   : ${uguuUrl}`
+          )
+
+          fs.unlinkSync(fileName)
+        } catch (err) {
+          console.error('[tourl ERROR]', err)
+          reply('❌ *Gagal upload, pastikan yang di-reply itu media valid!*')
+        }
+        break
+      }
+
   case "self": {
       if (!isOwner) return reply("❌ Khusus Owner!");
       global.selfmode = true;
