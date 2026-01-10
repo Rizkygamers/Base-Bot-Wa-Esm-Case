@@ -124,8 +124,7 @@ async function StartRizz() {
     const msg = m.messages[0]
     if (!msg.message) return
 
-
-    // Import dinamis biar gak error di ESM
+    
     const { default: handler } = await import("./case.js")
     handler(riz, m)
   })
