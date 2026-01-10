@@ -29,6 +29,80 @@ import Ai4Chat from './scrape/Ai4Chat.js'
 import UguuUpload from './scrape/Uguu.js'
 import CatboxMoe from './scrape/CatBox.js';
 
+// =====================
+// PLUGIN SYSTEM
+// =====================
+const PLUGIN_DIR = path.resolve("./plugin");
+let PLUGIN_MAP = new Map(); // commandLower -> run
+let PLUGIN_READY = false;
+let PLUGIN_LOADING = null;
+
+async function loadPluginsFast(force = false) {
+    if (PLUGIN_READY && !force) return;
+    if (PLUGIN_LOADING && !force) return PLUGIN_LOADING;
+
+    PLUGIN_LOADING = (async () => {
+        const map = new Map();
+
+        let files = [];
+        try {
+            files = fs.readdirSync(PLUGIN_DIR).filter(f => f.endsWith(".js"));
+        } catch (e) {
+            console.error("❌ Plugin dir tidak kebaca:", e);
+            PLUGIN_MAP = new Map();
+            PLUGIN_READY = true;
+            PLUGIN_LOADING = null;
+            return;
+        }
+
+        for (const file of files) {
+            try {
+                const filePath = path.join(PLUGIN_DIR, file);
+                const baseUrl = pathToFileURL(filePath).href;
+
+               
+                const mod = await import(force ? `${baseUrl}?v=${Date.now()}` : baseUrl);
+
+                const run = mod?.default;
+                const cmds = mod?.command || [];
+
+                if (typeof run !== "function" || !Array.isArray(cmds)) continue;
+
+                for (const c of cmds) {
+                    if (!c) continue;
+                    const key = String(c).toLowerCase();
+                    if (!map.has(key)) map.set(key, run);
+                }
+            } catch (e) {
+                console.error(`❌ Load plugin gagal (${file}):`, e?.message || e);
+            }
+        }
+
+        PLUGIN_MAP = map;
+        PLUGIN_READY = true;
+        PLUGIN_LOADING = null;
+    })();
+
+    return PLUGIN_LOADING;
+}
+
+
+// =====================
+// GROUP METADATA CACHE
+// =====================
+const GROUP_META_CACHE = new Map();
+const GROUP_META_TTL = 2 * 60 * 1000; // 2 menit
+
+async function getGroupMetaCached(riz, jid) {
+    const now = Date.now();
+    const hit = GROUP_META_CACHE.get(jid);
+    if (hit && hit.exp > now) return hit.data;
+
+    const data = await riz.groupMetadata(jid);
+    GROUP_META_CACHE.set(jid, { exp: now + GROUP_META_TTL, data });
+    return data;
+}
+
 // Export utama handler
 export default async function handler(riz, m) {
   const msg = m.messages[0]
@@ -86,14 +160,14 @@ function CleanJid(msg) {
 
   //===== MODUL GRUP =====
   let groupMetadata = {};
-  if (isGroup) {
+if (isGroup) {
     try {
-      groupMetadata = await riz.groupMetadata(id);
+        groupMetadata = await getGroupMetaCached(riz, id);
     } catch (e) {
-      console.error("Error groupMetadata:", e);
-      return;
+        console.error("Error groupMetadata:", e);
+        return;
     }
-  }
+}
 
   const groupName = isGroup ? (groupMetadata.subject || "Nama Grup Tidak Diketahui"): null;
   const groupDesc = isGroup ? (groupMetadata.desc?.toString() || "Deskripsi belum diset."): null;
@@ -181,76 +255,49 @@ const menu = `
     msg?.key?.fromMe === true;
     if (global.selfmode && !isOwner) return;
 
-  // === SYSTEM PLUGIN ===
-  const pluginDir = path.resolve("./plugin");
-  let plugins = [];
+  // =====================
+// PLUGIN
+// =====================
+await loadPluginsFast(false);
 
-  async function loadPlugins() {
-    try {
-      const files = fs.readdirSync(pluginDir).filter(f => f.endsWith(".js"));
-      for (const file of files) {
-        const filePath = path.join(pluginDir, file);
-        const module = await import(`file://${filePath}?v=${Date.now()}`);
-        const plugin = module.default;
-        const cmds = module.command || [];
+if (isOwner && (command === "reload" || command === "reloadplugin" || command === "reloadplugins")) {
+    await loadPluginsFast(true);
+    return reply("✅ Plugins berhasil di-reload.");
+}
 
-        if (!plugin || !Array.isArray(cmds)) {
-          console.log(`⚠️ ${file} plugin tidak valid. Pastikan pakai "export default" & "export const command"`);
-          continue;
-        }
-
-        plugins.push({
-          run: plugin, command: cmds
-        });
-        console.log(`✅ Loaded plugin: ${file} (${cmds.join(", ")})`);
-      }
-
-      console.log(`📦 Total plugin: ${plugins.length}`);
-    } catch (err) {
-      console.error("❌ Gagal load plugin:", err);
-    }
-  }
-
-  await loadPlugins();
-  const PLUGIN_CTX = {
+const PLUGIN_CTX = {
     riz,
     id,
     msg,
     sender,
     pushname,
     isOwner,
+    quoted,
     isAdmin,
+    body,
     participants,
     isBotAdmin,
     qriz,
+    lidi,
     groupMetadata,
     command,
     args,
     q,
     reply,
-    isGroup,
-  };
+    isGroup
+};
 
-  // === EKSEKUSI PLUGIN ===
-  for (const {
-    run, command: cmds
-  } of plugins) {
-    if (cmds.find(c => c.toLowerCase() === command)) {
-      try {
-        await run(msg, PLUGIN_CTX);
-        return; // stop biar gak lanjut ke switch-case
-      } catch (err) {
+const pluginRun = PLUGIN_MAP.get(command);
+if (pluginRun) {
+    try {
+        await pluginRun(msg, PLUGIN_CTX);
+        return;
+    } catch (err) {
         console.error(`❌ Plugin '${command}' error:`, err);
         await reply(`❌ Error di plugin '${command}': ${err.message}`);
         return;
-      }
     }
-  }
-
-  console.log("🧩 Command terdeteksi:", command);
-
-  console.log("📦 Plugin loaded:", plugins.map(p => p.command).flat());
-
+}
 
   switch (command) {
   
