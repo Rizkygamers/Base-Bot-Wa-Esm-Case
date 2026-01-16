@@ -1,7 +1,7 @@
 /*
   Made By RizkySigma
   Telegram : t.me/RizkyoktavianCihuy
-  Mohon Untuk Tidak Menghapus Watermark Di Dalam Kode Ini
+  Mohon Untuk Tidak Menghapus, Mengedit, dll Watermark Di Dalam Kode Ini
 */
 
 import { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } from "baileys"
