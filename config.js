@@ -6,9 +6,8 @@ global.mess = {
     group: 'Fitur ini hanya bisa digunakan di dalam grup!',
   }
   
-global.image = './db/img/pfp.png'
-
-global.owner = ['62xxx']
+global.image = "https://raw.githubusercontent.com/Rizkygamers/waifuim-img/main/uploads/image-1769614337905.jpg"
+global.owner = ['62895417273523']
   
 global.prefix = ['!', '.'];
   
