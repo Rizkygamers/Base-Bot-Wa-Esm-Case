@@ -91,7 +91,7 @@ async function loadPluginsFast(force = false) {
 // GROUP METADATA CACHE
 // =====================
 const GROUP_META_CACHE = new Map();
-const GROUP_META_TTL = 2 * 60 * 1000; // 2 menit
+const GROUP_META_TTL = 5 * 60 * 1000; // 5 menit
 
 async function getGroupMetaCached(riz, jid) {
     const now = Date.now();
@@ -102,6 +102,16 @@ async function getGroupMetaCached(riz, jid) {
     GROUP_META_CACHE.set(jid, { exp: now + GROUP_META_TTL, data });
     return data;
 }
+
+setInterval(() => {
+  const now = Date.now()
+  for (const [k, v] of GROUP_META_CACHE) {
+    if (v.exp < now) GROUP_META_CACHE.delete(k)
+  }
+}, 60_000)
+
+
+const pplu = fs.readFileSync(global.image)
 
 // Export utama handler
 export default async function handler(riz, m) {
@@ -130,7 +140,7 @@ function CleanJid(msg) {
   const pushname = msg.pushName || "Unknown";
   const isGroup = id.endsWith("@g.us");
 
-  const pplu = fs.readFileSync(global.image)
+  
   const qriz = {
     key: {
       participant: `0@s.whatsapp.net`,
