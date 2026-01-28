@@ -45,15 +45,8 @@ async function StartRizz() {
     auth: state,
     browser: ['Ubuntu', 'Chrome', '20.0.04'],
     version,
-    syncFullHistory: true,
-    generateHighQualityLinkPreview: true,
-    getMessage: async (key) => {
-      if (store) {
-        const msg = await store.loadMessage(key.remoteJid, key.id)
-        return msg?.message || undefined
-      }
-      return proto.Message.fromObject({})
-    }
+    syncFullHistory: false,
+    generateHighQualityLinkPreview: true
   })
 
   // Handle Pairing Code
