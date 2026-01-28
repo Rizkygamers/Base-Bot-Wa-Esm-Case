@@ -319,33 +319,23 @@ if (pluginRun) {
 
   case "menu": {
       await riz.sendMessage(
-        id,
-        {
-          image: menuImage,
-          caption: menu,
-          footer: "© RizkyDev - RizBot",
-          contextInfo: {
-            forwardingScore: 12,
-            isForwarded: true,
-            mentionedJid: [sender],
-            forwardedNewsletterMessageInfo: {
-              newsletterName: "— RizkyDev",
-              newsletterJid: "120363402305551203@newsletter"
-            },
-            externalAdReply: {
-              title: "Base Bot",
-              body: "By RizkyDev",
-              thumbnail: menuImage,
-              sourceUrl: "https://github.com/Rizkygamers",
-              mediaType: 1,
-              renderLargerThumbnail: true
-            }
-          }
-        },
-        {
-          quoted: qriz
-        }
-      )
+  id,
+  {
+    image: { url: menuImage },
+    caption: menu,
+    footer: "© RizkyDev - RizBot",
+    contextInfo: {
+      forwardingScore: 12,
+      isForwarded: true,
+      mentionedJid: [sender],
+      forwardedNewsletterMessageInfo: {
+        newsletterName: "— RizkyDev",
+        newsletterJid: "120363402305551203@newsletter"
+      },
+    },
+  },
+  { quoted: qriz }
+)
       break
     }
 
