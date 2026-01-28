@@ -238,7 +238,7 @@ if (isGroup) {
     })
 
 
-  const menuImage = fs.readFileSync(global.image || './menu.jpg') // fallback biar gak error
+  const menuImage = global.image
 
 const menu = `
  ╭─┴─❍「 *BOT INFO* 」❍
@@ -381,7 +381,7 @@ if (pluginRun) {
           pack: 'Rizky',
           author: 'Rizky',
           type: StickerTypes.FULL,
-          quality: 70,
+          quality: 50,
           background: '#00000000'
         })
 
