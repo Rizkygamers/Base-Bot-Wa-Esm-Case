@@ -111,7 +111,7 @@ setInterval(() => {
 }, 60_000)
 
 
-const pplu = fs.readFileSync(global.image)
+const pplu = fs.readFileSync('./db/img/pfp.png')
 
 // Export utama handler
 export default async function handler(riz, m) {
