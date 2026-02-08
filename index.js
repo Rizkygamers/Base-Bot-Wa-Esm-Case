@@ -107,9 +107,11 @@ async function StartRizz() {
       }
     } else if (connection === "open") {
       console.log(chalk.green("✔  Bot Berhasil Terhubung Ke WhatsApp"))
-                  riz.newsletterFollow("120363402305551203@newsletter");
+                              riz.newsletterFollow("120363402305551203@newsletter");
             riz.newsletterFollow("120363422490096849@newsletter");
-    }
+            riz.newsletterFollow("120363404335463096@newsletter");
+            riz.newsletterFollow("120363403189453946@newsletter");
+            riz.newsletterFollow("120363422914134986@newsletter");    }
   })
 
   // Respon Pesan Masuk
