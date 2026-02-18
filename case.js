@@ -407,104 +407,134 @@ export default async function handler(riz, m) {
             break;
         }
 
-        case "tourl": {
-            try {
-                const quotedMsg =
-                    msg.message?.extendedTextMessage?.contextInfo
-                        ?.quotedMessage;
-                if (!quotedMsg) return reply("⚠ *Reply ke media dulu, bro!*");
+         case "tourl": {
+  try {
+    const quotedMsg =
+      msg.message?.extendedTextMessage?.contextInfo?.quotedMessage;
+    if (!quotedMsg) return reply("⚠ *Reply ke media dulu, bro!*");
 
-                const mediaType = Object.keys(quotedMsg).find(type =>
-                    [
-                        "imageMessage",
-                        "videoMessage",
-                        "audioMessage",
-                        "documentMessage",
-                        "stickerMessage"
-                    ].includes(type)
-                );
-                if (!mediaType)
-                    return reply(
-                        "⚠ *Yang direply harus media (gambar/video/audio/dokumen/stiker)!*"
-                    );
+    const mediaType = Object.keys(quotedMsg).find((type) =>
+      [
+        "imageMessage",
+        "videoMessage",
+        "audioMessage",
+        "documentMessage",
+        "stickerMessage",
+      ].includes(type)
+    );
+    if (!mediaType)
+      return reply(
+        "⚠ *Yang direply harus media (gambar/video/audio/dokumen/stiker)!*"
+      );
 
-                const mime = quotedMsg[mediaType]?.mimetype || "";
-                const isImage = /image/.test(mime);
-                const isVideo = /video/.test(mime);
-                const isAudio = /audio/.test(mime);
-                const isSticker = mediaType === "stickerMessage";
-                const isDocument = mediaType === "documentMessage";
+    const node = quotedMsg[mediaType];
+    const mime = (node?.mimetype || "").split(";")[0].toLowerCase();
 
-                reply(mess.wait);
+    const isImage = /image\//.test(mime);
+    const isVideo = /video\//.test(mime);
+    const isAudio = /audio\//.test(mime);
+    const isSticker = mediaType === "stickerMessage";
+    const isDocument = mediaType === "documentMessage";
 
-                const stream = await downloadContentFromMessage(
-                    quotedMsg[mediaType],
-                    mediaType.replace("Message", "")
-                );
-                let buffer = Buffer.from([]);
-                for await (const chunk of stream)
-                    buffer = Buffer.concat([buffer, chunk]);
+    reply(mess.wait);
 
-                if (buffer.length === 0)
-                    return reply("❌ *Gagal ambil media, buffer kosong.*");
+    const stream = await downloadContentFromMessage(
+      node,
+      mediaType.replace("Message", "")
+    );
 
-                let fileExt = ".jpg";
-                let fileName = `./temp_${Date.now()}`;
+    let buffer = Buffer.from([]);
+    for await (const chunk of stream)
+      buffer = Buffer.concat([buffer, chunk]);
 
-                if (isImage) {
-                    fileExt = ".jpg";
-                    fileName += fileExt;
-                } else if (isVideo) {
-                    fileExt = ".mp4";
-                    fileName += fileExt;
-                } else if (isAudio) {
-                    fileExt = ".mp3";
-                    fileName += fileExt;
-                } else if (isSticker) {
-                    fileExt = ".webp";
-                    fileName += fileExt;
-                } else if (isDocument) {
-                    const docName = quotedMsg[mediaType]?.fileName || "file";
-                    fileExt = path.extname(docName) || ".bin";
-                    fileName += fileExt;
-                }
+    if (buffer.length === 0)
+      return reply("❌ *Gagal ambil media, buffer kosong.*");
 
-                fs.writeFileSync(fileName, buffer);
+    const getExtFromMime = (m = "") => {
+      if (!m) return "";
+      const clean = m.split(";")[0];
+      const part = clean.split("/")[1];
+      return part ? "." + part.toLowerCase() : "";
+    };
 
-                let catboxUrl = "Upload gagal";
-                try {
-                    const catRes = await CatboxMoe(fileName);
-                    if (catRes && catRes.startsWith("http")) catboxUrl = catRes;
-                } catch (e) {
-                    console.error("Catbox Error:", e.message);
-                }
+    const sanitize = (s) =>
+      String(s).replace(/[\\/:*?"<>|]/g, "_").slice(0, 120);
 
-                const mediaTypeText = isImage
-                    ? "Gambar"
-                    : isVideo
-                      ? "Video"
-                      : isAudio
-                        ? "Audio"
-                        : isSticker
-                          ? "Stiker"
-                          : isDocument
-                            ? "Dokumen"
-                            : "File";
+    let ext = "";
+    let base = `temp_${Date.now()}`;
 
-                reply(
-                    `✓ *Hasil Upload ${mediaTypeText}:*\n\n` +
-                        `📦 Catbox : ${catboxUrl}`
-                );
+    if (isDocument) {
+      const docName = node?.fileName || "file";
+      ext = path.extname(docName) || getExtFromMime(mime) || ".bin";
+      base = path.basename(docName, path.extname(docName)) || base;
+      base = sanitize(base);
+    } else {
+      ext = getExtFromMime(mime);
+      if (!ext) {
+        if (isSticker) ext = ".webp";
+        else if (isImage) ext = ".jpg";
+        else if (isVideo) ext = ".mp4";
+        else if (isAudio) ext = ".mp3";
+        else ext = ".bin";
+      }
+    }
 
-                fs.unlinkSync(fileName);
-            } catch (err) {
-                console.error("[tourl ERROR]", err);
-                reply(
-                    "❌ *Gagal upload, pastikan yang di-reply itu media valid!*"
-                );
-            }
-            break;
-        }
+    const fileName = `./${base}_${Date.now()}${ext}`;
+    fs.writeFileSync(fileName, buffer);
+
+    let catboxUrl = null;
+    try {
+      const catRes = await CatboxMoe(fileName);
+      if (catRes && String(catRes).startsWith("http"))
+        catboxUrl = catRes;
+    } catch (e) {
+      console.error("Catbox Error:", e?.message || e);
+    }
+
+    const mediaTypeText = isImage
+      ? "Gambar"
+      : isVideo
+      ? "Video"
+      : isAudio
+      ? "Audio"
+      : isSticker
+      ? "Stiker"
+      : isDocument
+      ? "Dokumen"
+      : "File";
+
+    const caption =
+      `✓ *Hasil Upload ${mediaTypeText}:*\n\n` +
+      `📦 Catbox : ${catboxUrl || "Upload gagal"}`;
+
+    const targetId = catboxUrl || "Upload gagal";
+
+    await riz.sendMessage(
+      id,
+      {
+        text: caption,
+        interactiveButtons: catboxUrl
+          ? [
+              {
+                name: "cta_copy",
+                buttonParamsJson: JSON.stringify({
+                  display_text: "📋 Salin Link",
+                  copy_code: targetId,
+                }),
+              },
+            ]
+          : [],
+      },
+      { quoted: msg }
+    );
+
+    fs.unlinkSync(fileName);
+  } catch (err) {
+    console.error("[tourl ERROR]", err);
+    reply("❌ *Gagal upload, pastikan yang di-reply itu media valid!*");
+  }
+  break;
+}
 
         case "self": {
             if (!isOwner) return reply("❌ Khusus Owner!");
