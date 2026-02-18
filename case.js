@@ -341,8 +341,8 @@ export default async function handler(riz, m) {
                         isForwarded: true,
                         mentionedJid: [sender],
                         forwardedNewsletterMessageInfo: {
-                            newsletterName: "— RizkyDev",
-                            newsletterJid: "120363402305551203@newsletter"
+                            newsletterName: `— ${global.namach}`,
+                            newsletterJid: global.idch
                         }
                     }
                 },
