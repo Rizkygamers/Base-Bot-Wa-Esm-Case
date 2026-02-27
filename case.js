@@ -26,7 +26,7 @@ import CatboxMoe from "./scrape/CatBox.js";
 // PLUGIN SYSTEM
 // =====================
 const PLUGIN_DIR = path.resolve("./plugin");
-let PLUGIN_MAP = new Map(); // commandLower -> run
+let PLUGIN_MAP = new Map();
 let PLUGIN_READY = false;
 let PLUGIN_LOADING = null;
 
@@ -87,7 +87,7 @@ async function loadPluginsFast(force = false) {
 // GROUP METADATA CACHE
 // =====================
 const GROUP_META_CACHE = new Map();
-const GROUP_META_TTL = 5 * 60 * 1000; // 5 menit
+const GROUP_META_TTL = 2500
 
 async function getGroupMetaCached(riz, jid) {
     const now = Date.now();
@@ -294,13 +294,11 @@ export default async function handler(riz, m) {
         sender,
         pushname,
         isOwner,
-        quoted,
         isAdmin,
         body,
         participants,
         isBotAdmin,
         qriz,
-        lidi,
         groupMetadata,
         command,
         args,
