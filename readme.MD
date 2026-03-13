@@ -1,6 +1,6 @@
 Base-Bot-Wa-Esm-Case
 
-> Simple bae cuy — WhatsApp bot base (ESM case)
+> Simple bae cuy — WhatsApp bot base (ESM caseXplugin)
 
 
 
