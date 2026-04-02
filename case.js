@@ -113,18 +113,45 @@ export default async function handler(riz, m) {
     const msg = m.messages[0];
     if (!msg.message) return;
 
-    let body =
-        msg.message.conversation ||
-        msg.message.extendedTextMessage?.text ||
-        msg.message.imageMessage?.caption ||
-        msg.message.videoMessage?.caption ||
-        msg.message.buttonsResponseMessage?.selectedButtonId ||
-        msg.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
-        msg.message.templateButtonReplyMessage?.selectedId ||
-        (msg.message.nativeFlowResponseMessage?.paramsJson
-            ? JSON.parse(msg.message.nativeFlowResponseMessage.paramsJson)?.id
-            : "") ||
-        "";
+    const nativeFlowId = (() => {
+            try {
+                const nf =
+                    msg.message?.nativeFlowResponseMessage ||
+                    msg.message?.interactiveResponseMessage
+                        ?.nativeFlowResponseMessage;
+
+                if (!nf?.paramsJson) return "";
+
+                const data = JSON.parse(nf.paramsJson);
+
+                if (typeof data === "string") return data;
+                if (data.id) return data.id;
+                if (data.rowId) return data.rowId;
+                if (data.selectedId) return data.selectedId;
+                if (data.selectedRowId) return data.selectedRowId;
+                if (Array.isArray(data.values) && data.values[0]?.id)
+                    return data.values[0].id;
+                if (Array.isArray(data.rows) && data.rows[0]?.id)
+                    return data.rows[0].id;
+
+                return "";
+            } catch (e) {
+                console.error("nativeFlow parse error:", e);
+                return "";
+            }
+        })();
+
+        let body =
+            msg.message.conversation ||
+            msg.message.extendedTextMessage?.text ||
+            msg.message.imageMessage?.caption ||
+            msg.message.videoMessage?.caption ||
+            msg.message.buttonsResponseMessage?.selectedButtonId ||
+            msg.message.listResponseMessage?.singleSelectReply?.selectedRowId ||
+            msg.message.templateButtonReplyMessage?.selectedId ||
+            nativeFlowId ||
+            "";
+
 
     function CleanJid(msg) {
         const raw =
