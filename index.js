@@ -4,7 +4,7 @@
   Mohon Untuk Tidak Menghapus, Mengedit, dll Watermark Di Dalam Kode Ini
 */
 
-import { makeWASocket, useMultiFileAuthState, fetchLatestBaileysVersion, DisconnectReason } from "baileys"
+import { makeWASocket, useMultiFileAuthState, fetchLatestWaWebVersion, DisconnectReason } from "baileys"
 import pino from "pino"
 import chalk from "chalk"
 import readline from "readline"
@@ -36,8 +36,8 @@ async function StartRizz() {
   const useCustomPair = true // <-- Set true utk custom Pair
 
   // Versi Terbaru
-  const { version, isLatest } = await fetchLatestBaileysVersion()
-  console.log(`Bot Using WA v${version.join('.')}, isLatest: ${isLatest}`)
+  const { version } = await fetchLatestWaWebVersion()
+  console.log(`Bot Using WA v${version.join('.')}`)
 
   const riz = makeWASocket({
     logger: pino({ level: "silent" }),
